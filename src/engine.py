@@ -1,9 +1,7 @@
 import torch
-from torch.autograd import Variable
-from tensorboardX import SummaryWriter
-
-from utils import save_checkpoint, use_optimizer
 from metrics import MetronAtK
+from tensorboardX import SummaryWriter
+from utils import save_checkpoint, use_optimizer
 
 
 class Engine(object):
@@ -15,7 +13,7 @@ class Engine(object):
     def __init__(self, config):
         self.config = config  # model configuration
         self._metron = MetronAtK(top_k=10)
-        self._writer = SummaryWriter(log_dir='runs/{}'.format(config['alias']))  # tensorboard writer
+        self._writer = SummaryWriter(logdir='runs/{}'.format(config['alias']))  # tensorboard writer
         self._writer.add_text('config', str(config), 0)
         self.opt = use_optimizer(self.model, config)
         # explicit feedback
