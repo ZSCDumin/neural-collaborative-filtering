@@ -32,8 +32,8 @@ class NeuMF(torch.nn.Module):
         user_embedding_mf = self.embedding_user_mf(user_indices)
         item_embedding_mf = self.embedding_item_mf(item_indices)
 
-        mlp_vector = torch.cat([user_embedding_mlp, item_embedding_mlp], dim=-1)  # the concat latent vector
-        mf_vector =torch.mul(user_embedding_mf, item_embedding_mf)
+        mlp_vector = torch.cat([user_embedding_mlp, item_embedding_mlp], dim=-1)  # MLP方式的嵌入向量采用拼接方式
+        mf_vector = torch.mul(user_embedding_mf, item_embedding_mf)  # MF方式的向量采用元素级别的乘积操作
 
         for idx, _ in enumerate(range(len(self.fc_layers))):
             mlp_vector = self.fc_layers[idx](mlp_vector)
@@ -50,6 +50,8 @@ class NeuMF(torch.nn.Module):
     def load_pretrain_weights(self):
         """Loading weights from trained MLP model & GMF model"""
         config = self.config
+
+        # 加载训练好的MLP模型
         config['latent_dim'] = config['latent_dim_mlp']
         mlp_model = MLP(config)
         if config['use_cuda'] is True:
@@ -61,6 +63,7 @@ class NeuMF(torch.nn.Module):
         for idx in range(len(self.fc_layers)):
             self.fc_layers[idx].weight.data = mlp_model.fc_layers[idx].weight.data
 
+        # 加载训练好的GMF模型
         config['latent_dim'] = config['latent_dim_mf']
         gmf_model = GMF(config)
         if config['use_cuda'] is True:
@@ -69,12 +72,14 @@ class NeuMF(torch.nn.Module):
         self.embedding_user_mf.weight.data = gmf_model.embedding_user.weight.data
         self.embedding_item_mf.weight.data = gmf_model.embedding_item.weight.data
 
+        # 两个模型数据求平均值
         self.affine_output.weight.data = 0.5 * torch.cat([mlp_model.affine_output.weight.data, gmf_model.affine_output.weight.data], dim=-1)
         self.affine_output.bias.data = 0.5 * (mlp_model.affine_output.bias.data + gmf_model.affine_output.bias.data)
 
 
 class NeuMFEngine(Engine):
     """Engine for training & evaluating GMF model"""
+
     def __init__(self, config):
         self.model = NeuMF(config)
         if config['use_cuda'] is True:

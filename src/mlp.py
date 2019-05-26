@@ -51,13 +51,12 @@ class MLP(torch.nn.Module):
 
 class MLPEngine(Engine):
     """Engine for training & evaluating GMF model"""
+
     def __init__(self, config):
         self.model = MLP(config)
         if config['use_cuda'] is True:
             use_cuda(True, config['device_id'])
             self.model.cuda()
         super(MLPEngine, self).__init__(config)
-        print(self.model)
-
         if config['pretrain']:
             self.model.load_pretrain_weights()

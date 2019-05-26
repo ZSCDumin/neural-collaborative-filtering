@@ -4,11 +4,13 @@ import pandas as pd
 from copy import deepcopy
 from torch.utils.data import DataLoader, Dataset
 
+pd.set_option('mode.chained_assignment', None)
 random.seed(0)
 
 
 class UserItemRatingDataset(Dataset):
     """Wrapper, convert <user, item, rating> Tensor into Pytorch Dataset"""
+
     def __init__(self, user_tensor, item_tensor, target_tensor):
         """
         args:
@@ -54,7 +56,7 @@ class SampleGenerator(object):
         max_rating = ratings.rating.max()
         ratings['rating'] = ratings.rating * 1.0 / max_rating
         return ratings
-    
+
     def _binarize(self, ratings):
         """binarize into 0 or 1, imlicit feedback"""
         ratings = deepcopy(ratings)
